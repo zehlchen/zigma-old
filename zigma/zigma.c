@@ -76,14 +76,14 @@ zigma_t* zigma_init_hash(zigma_t* handle)
   return handle;
 }
 
-void zigma_hash_sign(zigma_t* zigma, char* data, uint32 length)
+void zigma_hash_sign(zigma_t* handle, char* data, uint32 length)
 {
   for (int i = 255; i >= 0; i--) {
-    zigma_encrypt_byte(zigma, i);
+    zigma_encrypt_byte(handle, i);
   }
 
   for (int i = 0; i < length; i++)
-    data[i] = zigma_encrypt_byte(zigma, 0);
+    data[i] = zigma_encrypt_byte(handle, 0);
 }
 
 uint8 zigma_encrypt_byte(zigma_t* handle, uint32 byte)
@@ -115,7 +115,7 @@ uint8 zigma_decrypt_byte(zigma_t* handle, uint32 byte)
 
   handle->pride += handle->pv[handle->radix++];
 
-  swaptemp                = handle->pv[handle->right];
+  swaptemp                  = handle->pv[handle->right];
   handle->pv[handle->right] = handle->pv[handle->pride];
   handle->pv[handle->pride] = handle->pv[handle->left];
   handle->pv[handle->left]  = handle->pv[handle->radix];

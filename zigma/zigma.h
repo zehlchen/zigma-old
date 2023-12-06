@@ -35,6 +35,18 @@ typedef short     sint16;
 typedef int       sint32;
 typedef long long sint64;
 
+#define ZIGMA_VERSION "1.2.0"
+
+#ifndef NDEBUG
+#define DEBUG_ASSERT(x)                            \
+  if (!(x)) {                                      \
+    fprintf(stderr, "assertion failed: %s\n", #x); \
+    exit(EXIT_FAILURE);                            \
+  }
+#else
+#define DEBUG_ASSERT(x)
+#endif
+
 /* The cryptographic state, essentially an LFSR */
 typedef struct {
   uint8 radix;   /* The first index (smooth, gradual) */
