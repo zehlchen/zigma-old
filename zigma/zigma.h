@@ -35,27 +35,26 @@ typedef short     sint16;
 typedef int       sint32;
 typedef long long sint64;
 
+/* The cryptographic state, essentially an LFSR */
 typedef struct {
-  uint8 radix;
-  uint8 pride;
-  uint8 chasm;
-
-  uint8 left;
-  uint8 right;
-
-  uint8 pv[256];
+  uint8 radix;   /* The first index (smooth, gradual) */
+  uint8 pride;   /* The second index (erratic shift) */
+  uint8 chasm;   /* The third index (highly dependent) */
+  uint8 left;    /* The last plaintext state */
+  uint8 right;   /* The last ciphertext state */
+  uint8 pv[256]; /* 256-byte permutation vector */
 } zigma_t;
 
-zigma_t* zigma_init(zigma_t* zigma, uint8 const* key, uint32 length);
-zigma_t* zigma_init_hash(zigma_t* zigma);
+zigma_t* zigma_init(zigma_t* handle, uint8 const* key, uint32 length);
+zigma_t* zigma_init_hash(zigma_t* handle);
 
-void zigma_hash_sign(zigma_t* zigma, char* data, uint32 length);
+void zigma_hash_sign(zigma_t* handle, char* data, uint32 length);
 
-unsigned char zigma_encrypt_byte(zigma_t* zigma, uint32 z);
-unsigned char zigma_decrypt_byte(zigma_t* zigma, uint32 z);
+unsigned char zigma_encrypt_byte(zigma_t* handle, uint32 z);
+unsigned char zigma_decrypt_byte(zigma_t* handle, uint32 z);
 
-void zigma_encrypt(zigma_t* zigma, uint8* data, uint32 size);
-void zigma_decrypt(zigma_t* zigma, uint8* data, uint32 size);
+void zigma_encrypt(zigma_t* handle, uint8* data, uint32 size);
+void zigma_decrypt(zigma_t* handle, uint8* data, uint32 size);
 
 uint8 zigma_keyrand(zigma_t* zigma, uint32 limit, uint8 const* key, uint32 length, uint8* rsum, uint32* keypos);
 void  zigma_print(zigma_t* zigma);

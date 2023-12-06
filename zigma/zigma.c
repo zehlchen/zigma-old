@@ -26,14 +26,14 @@
 
 #include "zigma.h"
 
-zigma_t* zigma_init(zigma_t* zigma, uint8 const* key, uint32 length)
+zigma_t* zigma_init(zigma_t* handle, uint8 const* key, uint32 length)
 {
-  if (zigma == NULL)
-    zigma = (zigma_t*) malloc(sizeof(zigma_t));
+  if (handle == NULL)
+    handle = (zigma_t*) malloc(sizeof(zigma_t));
 
   if (key == NULL) {
-    zigma_init_hash(zigma);
-    return zigma;
+    zigma_init_hash(handle);
+    return handle;
   }
 
   uint8  toswap   = 0;
@@ -42,38 +42,38 @@ zigma_t* zigma_init(zigma_t* zigma, uint8 const* key, uint32 length)
   uint32 keypos   = 0;
 
   for (int i = 0; i < 256; i++)
-    zigma->pv[i] = i;
+    handle->pv[i] = i;
 
   for (int i = 255; i >= 0; i--) {
-    toswap = zigma_keyrand(zigma, i, key, length, &rsum, &keypos);
+    toswap = zigma_keyrand(handle, i, key, length, &rsum, &keypos);
 
-    swaptemp          = zigma->pv[i];
-    zigma->pv[i]      = zigma->pv[toswap];
-    zigma->pv[toswap] = swaptemp;
+    swaptemp           = handle->pv[i];
+    handle->pv[i]      = handle->pv[toswap];
+    handle->pv[toswap] = swaptemp;
   }
 
-  zigma->radix = zigma->pv[1];
-  zigma->pride = zigma->pv[3];
-  zigma->chasm = zigma->pv[5];
-  zigma->left  = zigma->pv[7];
-  zigma->right = zigma->pv[rsum];
+  handle->radix = handle->pv[1];
+  handle->pride = handle->pv[3];
+  handle->chasm = handle->pv[5];
+  handle->left  = handle->pv[7];
+  handle->right = handle->pv[rsum];
 
-  return zigma;
+  return handle;
 }
 
-zigma_t* zigma_init_hash(zigma_t* zigma)
+zigma_t* zigma_init_hash(zigma_t* handle)
 {
-  zigma->radix = 1;
-  zigma->pride = 3;
-  zigma->chasm = 5;
-  zigma->left  = 7;
-  zigma->right = 11;
+  handle->radix = 1;
+  handle->pride = 3;
+  handle->chasm = 5;
+  handle->left  = 7;
+  handle->right = 11;
 
   for (int i = 0, j = 255; i < 256; i++, j--) {
-    zigma->pv[i] = (uint8) j;
+    handle->pv[i] = (uint8) j;
   }
 
-  return zigma;
+  return handle;
 }
 
 void zigma_hash_sign(zigma_t* zigma, char* data, uint32 length)
@@ -86,65 +86,65 @@ void zigma_hash_sign(zigma_t* zigma, char* data, uint32 length)
     data[i] = zigma_encrypt_byte(zigma, 0);
 }
 
-uint8 zigma_encrypt_byte(zigma_t* zigma, uint32 byte)
+uint8 zigma_encrypt_byte(zigma_t* handle, uint32 byte)
 {
   uint8 swaptemp;
 
-  zigma->pride += zigma->pv[zigma->radix++];
+  handle->pride += handle->pv[handle->radix++];
 
-  swaptemp                = zigma->pv[zigma->right];
-  zigma->pv[zigma->right] = zigma->pv[zigma->pride];
-  zigma->pv[zigma->pride] = zigma->pv[zigma->left];
-  zigma->pv[zigma->left]  = zigma->pv[zigma->radix];
-  zigma->pv[zigma->radix] = swaptemp;
+  swaptemp                  = handle->pv[handle->right];
+  handle->pv[handle->right] = handle->pv[handle->pride];
+  handle->pv[handle->pride] = handle->pv[handle->left];
+  handle->pv[handle->left]  = handle->pv[handle->radix];
+  handle->pv[handle->radix] = swaptemp;
 
-  zigma->chasm += zigma->pv[swaptemp];
+  handle->chasm += handle->pv[swaptemp];
 
-  zigma->right =
-      byte ^ zigma->pv[(zigma->pv[zigma->pride] + zigma->pv[zigma->radix]) & 0xFF] ^
-      zigma->pv[zigma->pv[(zigma->pv[zigma->left] + zigma->pv[zigma->right] + zigma->pv[zigma->chasm]) & 0xFF]];
+  handle->right =
+      byte ^ handle->pv[(handle->pv[handle->pride] + handle->pv[handle->radix]) & 0xFF] ^
+      handle->pv[handle->pv[(handle->pv[handle->left] + handle->pv[handle->right] + handle->pv[handle->chasm]) & 0xFF]];
 
-  zigma->left = byte;
+  handle->left = byte;
 
-  return zigma->right;
+  return handle->right;
 }
 
-uint8 zigma_decrypt_byte(zigma_t* zigma, uint32 byte)
+uint8 zigma_decrypt_byte(zigma_t* handle, uint32 byte)
 {
   uint8 swaptemp;
 
-  zigma->pride += zigma->pv[zigma->radix++];
+  handle->pride += handle->pv[handle->radix++];
 
-  swaptemp                = zigma->pv[zigma->right];
-  zigma->pv[zigma->right] = zigma->pv[zigma->pride];
-  zigma->pv[zigma->pride] = zigma->pv[zigma->left];
-  zigma->pv[zigma->left]  = zigma->pv[zigma->radix];
-  zigma->pv[zigma->radix] = swaptemp;
+  swaptemp                = handle->pv[handle->right];
+  handle->pv[handle->right] = handle->pv[handle->pride];
+  handle->pv[handle->pride] = handle->pv[handle->left];
+  handle->pv[handle->left]  = handle->pv[handle->radix];
+  handle->pv[handle->radix] = swaptemp;
 
-  zigma->chasm += zigma->pv[swaptemp];
+  handle->chasm += handle->pv[swaptemp];
 
-  zigma->left =
-      byte ^ zigma->pv[(zigma->pv[zigma->pride] + zigma->pv[zigma->radix]) & 0xFF] ^
-      zigma->pv[zigma->pv[(zigma->pv[zigma->left] + zigma->pv[zigma->right] + zigma->pv[zigma->chasm]) & 0xFF]];
+  handle->left =
+      byte ^ handle->pv[(handle->pv[handle->pride] + handle->pv[handle->radix]) & 0xFF] ^
+      handle->pv[handle->pv[(handle->pv[handle->left] + handle->pv[handle->right] + handle->pv[handle->chasm]) & 0xFF]];
 
-  zigma->right = byte;
+  handle->right = byte;
 
-  return zigma->left;
+  return handle->left;
 }
 
-void zigma_encrypt(zigma_t* zigma, uint8* data, uint32 size)
+void zigma_encrypt(zigma_t* handle, uint8* data, uint32 size)
 {
   for (int i = 0; i < size; i++)
-    data[i] = zigma_encrypt_byte(zigma, data[i]);
+    data[i] = zigma_encrypt_byte(handle, data[i]);
 }
 
-void zigma_decrypt(zigma_t* zigma, uint8* data, uint32 size)
+void zigma_decrypt(zigma_t* handle, uint8* data, uint32 size)
 {
   for (int i = 0; i < size; i++)
-    data[i] = zigma_decrypt_byte(zigma, data[i]);
+    data[i] = zigma_decrypt_byte(handle, data[i]);
 }
 
-uint8 zigma_keyrand(zigma_t* zigma, uint32 limit, uint8 const* key, uint32 length, uint8* rsum, uint32* keypos)
+uint8 zigma_keyrand(zigma_t* handle, uint32 limit, uint8 const* key, uint32 length, uint8* rsum, uint32* keypos)
 {
   uint32 u;
   uint32 retry_limiter = 0;
@@ -154,7 +154,7 @@ uint8 zigma_keyrand(zigma_t* zigma, uint32 limit, uint8 const* key, uint32 lengt
     mask = (mask << 1) + 1;
 
   do {
-    *rsum = zigma->pv[(unsigned) *rsum] + key[(*keypos)++];
+    *rsum = handle->pv[(unsigned) *rsum] + key[(*keypos)++];
 
     if (*keypos >= length) {
       *keypos = 0;
@@ -171,17 +171,17 @@ uint8 zigma_keyrand(zigma_t* zigma, uint32 limit, uint8 const* key, uint32 lengt
   return u;
 }
 
-void zigma_print(zigma_t* zigma)
+void zigma_print(zigma_t* handle)
 {
-  fprintf(stderr, "*** DANGER: NEVER SHARE PERMUTATION VECTOR OR INDEXES! EVER!\n");
+  fprintf(stderr, ">>> DANGER: NEVER SHARE PERMUTATION VECTOR OR INDEXES! EVER!\n");
   fprintf(stderr, "zigma_state_machasmne[] = { /* DEBUG PRINT */\n");
-  fprintf(stderr, "  radix/pride/chasm = %02X/%02X/%02X\n", zigma->radix, zigma->pride, zigma->chasm);
-  fprintf(stderr, "  pre/post   = %02X/%02X\n", zigma->left, zigma->right);
+  fprintf(stderr, "  radix/pride/chasm = %02X/%02X/%02X\n", handle->radix, handle->pride, handle->chasm);
+  fprintf(stderr, "  pre/post   = %02X/%02X\n", handle->left, handle->right);
   fprintf(stderr, "  pvector[]  = {\n    ");
 
   /* Print pv[] in base 16 */
   for (int i = 0; i < 256; i++) {
-    fprintf(stderr, "%02x", zigma->pv[i]);
+    fprintf(stderr, "%02x", handle->pv[i]);
 
     if ((i + 1) % 8 == 0) {
       fprintf(stderr, " ");
