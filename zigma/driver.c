@@ -20,9 +20,59 @@
  *
  */
 
+#include <ctype.h>
+#include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <termios.h>
+#include <unistd.h>
+
+
+#include "zigma.h"
+#include "kvlist.h"
+
+
+enum mode_t {
+  MODE_NONE = 0,
+  MODE_ENCRYPT,
+  MODE_DECRYPT,
+  MODE_HASH,
+  MODE_RANDOM,
+};
+
+/* Prints the command line usage to stderr */
+void print_usage(char const* myself)
+{
+  fprintf(stderr, "usage: %s MODE [OPERAND...]\n", myself);
+  fprintf(stderr,
+          "  where MODE must be one of:\n"
+          "    encode      create a cryptogram\n"
+          "    decode      restore a cryptogram\n"
+          "    hash        compute standardized checksum\n"
+          "  and OPERAND may be any of:\n"
+          "    if=FILE     input file (instead of STDIN)\n"
+          "    of=FILE     output file (instead of STDOUT)\n"
+          "    key=FILE    use a key file instead of PASSPHRASE\n"
+          "    fmt=BASE    format: 16 (hex dump) or 256 (raw binary)\n"
+          ""
+          "\n"
+          "N and BYTES may use one of the following multiplicative suffixes:\n"
+          " C=1, K=1024, M=1024*1024, G=1024*1024*1024\n"
+          "\n"
+          "ZIGMA (C) 1999, 2005, 2023 Chase Zehl O'Byrne <zehl@live.com>\n");
+}
+
+
+
 
 int main(int argc, char* argv[])
 {
+  if (argc < 2) {
+    print_usage(argv[0]);
+    return 0;
+  }
+
   return 0;
 }
