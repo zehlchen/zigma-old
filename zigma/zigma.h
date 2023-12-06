@@ -37,6 +37,9 @@ typedef long long sint64;
 
 #define ZIGMA_VERSION "1.2.0"
 
+/*
+ * Debug code ... respect no-debug requests.
+ */
 #ifndef NDEBUG
 #define DEBUG_ASSERT(x)                            \
   if (!(x)) {                                      \
@@ -46,6 +49,42 @@ typedef long long sint64;
 #else
 #define DEBUG_ASSERT(x)
 #endif
+
+/* Debug Verbosity */
+typedef enum { DEBUG_NONE = 0, DEBUG_LOW, DEBUG_MEDIUM, DEBUG_HIGH } debug_level_t;
+
+extern debug_level_t DEBUG_LEVEL;
+
+void debug_printf(debug_level_t level, char const* format, ...);
+
+#define DEBUG_PRINT_ARRAY(var, size)                    \
+  {                                                     \
+    fprintf(stderr, "(" #var ") = %d <", size);         \
+    for (int _i = 0; _i < size; _i++) {                 \
+      fprintf(stderr, "%02X", (unsigned char) var[_i]); \
+    }                                                   \
+    fprintf(stderr, ">\n");                             \
+  }
+
+/*
+ * Useful function assists.
+ */
+
+/* Add a multiplicative value to a number K, M, G and so on*/
+uint32 str2bytes(char const* str);
+
+/* Duplicate a string safely */
+char* safe_strdup(char const* str);
+
+/* Case insensitive comapre */
+int stricmp(char const* left, char const* right);
+
+/* Get rid of something for good */
+void memnull(void* ptr, uint32 size);
+
+/*
+ * The Zigma Cipher
+ */
 
 /* The cryptographic state, essentially an LFSR */
 typedef struct {
