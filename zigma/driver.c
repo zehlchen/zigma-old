@@ -32,13 +32,15 @@
 #include "kvlist.h"
 #include "zigma.h"
 
-enum mode_t {
+enum command_mode_t {
   MODE_NONE = 0,
   MODE_ENCRYPT,
   MODE_DECRYPT,
   MODE_HASH,
   MODE_RANDOM,
 };
+
+debug_level_t DEBUG_LEVEL = DEBUG_HIGH;
 
 /* Prints the command line usage to stderr */
 void print_usage(char const* myself)
@@ -204,12 +206,56 @@ void memnull(void* ptr, uint32 size)
     *_ptr++ = 0;
 }
 
-int main(int argc, char* argv[])
+int parse_command(kvlist_t** head, int argc, char const* argv[])
+{
+  import_defaults(head);
+
+  for (int i = 2; i < argc; i++) {
+    char* dupl    = safe_strdup(argv[i]);
+    char* delimit = strchr(dupl, '=');
+    char* key     = dupl;
+    char* value   = "";
+
+    if (delimit != NULL) {
+      *delimit = '\0';
+      value    = delimit + 1;
+    }
+
+    // Add or update the key-value pair.
+    kvlist_assign(head, key, value);
+    free(dupl);
+  }
+
+  enum command_mode_t command = MODE_NONE;
+
+  char const* modus = argv[1];
+
+#define _CMP(OPT, X)         \
+  if (strcmp(modus, X) == 0) \
+    command = OPT;
+
+  _CMP(MODE_ENCRYPT, "encode");
+  _CMP(MODE_DECRYPT, "decode");
+  _CMP(MODE_HASH, "hash");
+#undef _CMP
+
+  return command;
+}
+
+int main(int argc, char const* argv[])
 {
   if (argc < 2) {
     print_usage(argv[0]);
     return 0;
   }
+
+  fprintf(stderr, "--- ZIGMA version %s ... \n", ZIGMA_VERSION);
+  fprintf(stderr, ">>> WARNING: SENSITIVE DIAGNOSTIC DATA. USE WITH CAUTION!\n");
+  kvlist_t* opt = NULL;
+
+  enum command_mode_t command = parse_command(&opt, argc, argv);
+
+  kvlist_print(&opt);
 
   return 0;
 }

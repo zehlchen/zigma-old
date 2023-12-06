@@ -38,5 +38,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(zigma)
 target_sources(zigma PRIVATE
   zigma/driver.c
+  zigma/kvlist.c
   zigma/zigma.c
 )
