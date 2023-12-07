@@ -86,7 +86,7 @@ void memnull(void* ptr, uint32 size);
  * The Zigma Cipher
  */
 
-/* The cryptographic state, essentially an LFSR */
+/* Cryptographic state machine handle. */
 typedef struct {
   uint8 radix;   /* The first index (smooth, gradual) */
   uint8 pride;   /* The second index (erratic shift) */
@@ -96,18 +96,31 @@ typedef struct {
   uint8 pv[256]; /* 256-byte permutation vector */
 } zigma_t;
 
+/* Initialize a zigma_t handle. If handle is NULL, allocate. */
 zigma_t* zigma_init(zigma_t* handle, uint8 const* key, uint32 length);
+
+/* Prepare the handle with a standardized starting point for hash function. */
 zigma_t* zigma_init_hash(zigma_t* handle);
 
-void zigma_hash_sign(zigma_t* handle, char* data, uint32 length);
+/* Terminate the state for the purpose of generating a checksum. */
+void zigma_hash_sign(zigma_t* handle, uint8* data, uint32 length);
 
+/* Encrypt a single byte. */
 unsigned char zigma_encrypt_byte(zigma_t* handle, uint32 z);
+
+/* Decrypt a single byte. */
 unsigned char zigma_decrypt_byte(zigma_t* handle, uint32 z);
 
+/* Encrypt a block of data. */
 void zigma_encrypt(zigma_t* handle, uint8* data, uint32 size);
+
+/* Decrypt a block of data. */
 void zigma_decrypt(zigma_t* handle, uint8* data, uint32 size);
 
-uint8 zigma_keyrand(zigma_t* zigma, uint32 limit, uint8 const* key, uint32 length, uint8* rsum, uint32* keypos);
-void  zigma_print(zigma_t* zigma);
+/* Perturb the state with a given key. */
+uint8 zigma_keyrand(zigma_t* handle, uint32 limit, uint8 const* key, uint32 length, uint8* rsum, uint32* keypos);
+
+/* Output diagnostic data. */
+void  zigma_print(zigma_t* handle);
 
 #endif // _ZIGMA_ZIGMA_H_

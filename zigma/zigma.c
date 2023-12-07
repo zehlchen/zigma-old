@@ -76,12 +76,14 @@ zigma_t* zigma_init_hash(zigma_t* handle)
   return handle;
 }
 
-void zigma_hash_sign(zigma_t* handle, char* data, uint32 length)
+void zigma_hash_sign(zigma_t* handle, uint8* data, uint32 length)
 {
+  /* Advance the permutation vector. */
   for (int i = 255; i >= 0; i--) {
     zigma_encrypt_byte(handle, i);
   }
 
+/* Encrypt 0 to desired length to populate hash value */
   for (int i = 0; i < length; i++)
     data[i] = zigma_encrypt_byte(handle, 0);
 }

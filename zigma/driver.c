@@ -85,7 +85,7 @@ void import_defaults(kvlist_t** head)
 #undef _KV
 }
 
-unsigned long get_passwd(char* buffer, char const* prompt)
+unsigned long get_passwd(uint8* buffer, uint8* prompt)
 {
   struct termios old_term;
   struct termios new_term;
@@ -296,13 +296,13 @@ void handle_cipher(kvlist_t** head)
     fprintf(stderr, "successfully opened output file '%s' for writing!\n", output->value);
   }
 
-  char passkey[256]       = {0};
-  char passkey_retry[256] = {0};
+  uint8 passkey[256]       = {0};
+  uint8 passkey_retry[256] = {0};
 
   unsigned long keylen       = get_passwd(passkey, "enter passphrase: ");
   unsigned long keylen_retry = get_passwd(passkey_retry, "enter passphrase again: ");
 
-  if (keylen != keylen_retry || strcmp(passkey, passkey_retry) != 0) {
+  if (keylen != keylen_retry || strcmp((char*) passkey, (char*) passkey_retry) != 0) {
     fprintf(stderr, "PASSWORD MISMATCH!\n");
     exit(EXIT_FAILURE);
   }
@@ -313,9 +313,9 @@ void handle_cipher(kvlist_t** head)
 
   zigma_cb_t* zigma_callback = zigma_encrypt;
 
-  char          buffer[1024];
-  unsigned long total = 0;
-  unsigned long count;
+  uint8  buffer[1024];
+  uint32 total = 0;
+  uint32 count;
 
   int output_base = strtoul(fmt->value, 0, 10);
 
@@ -330,7 +330,7 @@ void handle_cipher(kvlist_t** head)
     fflush(output_fp);
   }
 
-  fprintf(stderr, "complete! total of %lu bytes read/written\n", total);
+  fprintf(stderr, "complete! total of %u bytes read/written\n", total);
   fclose(output_fp);
 }
 
@@ -373,9 +373,9 @@ void handle_decipher(kvlist_t** head)
     fprintf(stderr, "successfully opened output file '%s' for writing!\n", output->value);
   }
 
-  char passkey[256] = {0};
+  uint8 passkey[256] = {0};
 
-  unsigned long keylen = get_passwd(passkey, "enter passphrase: ");
+  uint32 keylen = get_passwd(passkey, "enter passphrase: ");
 
   zigma_t* poem = zigma_init(NULL, passkey, keylen);
 
@@ -383,9 +383,9 @@ void handle_decipher(kvlist_t** head)
 
   zigma_cb_t* poem_callback = zigma_decrypt;
 
-  char          buffer[1024];
-  unsigned long total = 0;
-  unsigned long count;
+  uint8  buffer[1024];
+  uint32 total = 0;
+  uint32 count;
 
   int output_base = strtoul(fmt->value, 0, 10);
 
@@ -398,8 +398,55 @@ void handle_decipher(kvlist_t** head)
     }
   }
 
-  fprintf(stderr, "complete! total of %lu bytes read/written\n", total);
+  fprintf(stderr, "complete! total of %u bytes read/written\n", total);
 }
+
+void handle_checksum(kvlist_t** head)
+{
+  kvlist_t* input = kvlist_search(head, "if");
+
+  DEBUG_ASSERT(input != NULL);
+
+  zigma_t* poem = zigma_init(NULL, NULL, 0);
+
+  zigma_print(poem);
+
+  FILE* input_fp = stdin;
+
+  /* Setup the input. */
+  if (*input->value != 0) {
+    input_fp = fopen(input->value, "r");
+
+    if (input_fp == NULL) {
+      fprintf(stderr, "ERROR: fopen(): unable to open input file '%s': %s\n", input->value, strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+
+    fprintf(stderr, "successfully opened input file '%s' for reading!\n", input->value);
+  }
+
+  zigma_cb_t* zigma_callback = zigma_encrypt;
+
+  uint8  buffer[1024] = {0};
+  uint32 total        = 0;
+  uint32 count;
+
+  while ((count = fread(buffer, 1, 1024, input_fp)) > 0) {
+    total += count;
+    zigma_callback(poem, buffer, count);
+  }
+
+  uint8 checksum[32] = {0};
+
+  zigma_hash_sign(poem, checksum, 32);
+
+  fprintf(stderr, "%s (%u bytes): ", input->value, total);
+  for (int j = 0; j < 24; j++)
+    fprintf(stderr, "%02X", (unsigned char) checksum[j]);
+
+  fprintf(stderr, "\n");
+}
+
 int main(int argc, char const* argv[])
 {
   if (argc < 2) {
@@ -428,6 +475,11 @@ int main(int argc, char const* argv[])
 
     case MODE_DECRYPT:
       handle_decipher(&opt);
+      return 0;
+      break;
+
+    case MODE_HASH:
+      handle_checksum(&opt);
       return 0;
       break;
   }
