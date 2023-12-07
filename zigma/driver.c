@@ -40,6 +40,9 @@ enum command_mode_t {
   MODE_RANDOM,
 };
 
+/* Generalized callback for encrypt/decrypt */
+typedef void(zigma_cb_t)(zigma_t*, uint8*, uint32);
+
 debug_level_t DEBUG_LEVEL = DEBUG_HIGH;
 
 /* Prints the command line usage to stderr */
@@ -242,6 +245,149 @@ int parse_command(kvlist_t** head, int argc, char const* argv[])
   return command;
 }
 
+void handle_cipher(kvlist_t** head)
+{
+  kvlist_t* input  = kvlist_search(head, "if");
+  kvlist_t* output = kvlist_search(head, "of");
+  kvlist_t* key    = kvlist_search(head, "key");
+  kvlist_t* fmt    = kvlist_search(head, "fmt");
+
+  DEBUG_ASSERT(input != NULL);
+  DEBUG_ASSERT(output != NULL);
+  DEBUG_ASSERT(key != NULL);
+  DEBUG_ASSERT(fmt != NULL);
+
+  char passkey[256]       = {0};
+  char passkey_retry[256] = {0};
+
+  unsigned long keylen       = get_passwd(passkey, "enter passphrase: ");
+  unsigned long keylen_retry = get_passwd(passkey_retry, "enter passphrase again: ");
+
+  if (keylen != keylen_retry || strcmp(passkey, passkey_retry) != 0) {
+    fprintf(stderr, "PASSWORD MISMATCH!\n");
+    exit(EXIT_FAILURE);
+  }
+
+  zigma_t* poem = zigma_init(NULL, passkey, keylen);
+
+  zigma_print(poem);
+
+  FILE* input_fp  = stdin;
+  FILE* output_fp = stdout;
+
+  /* Setup the input. */
+  if (*input->value != 0) {
+    input_fp = fopen(input->value, "r");
+
+    if (input_fp == NULL) {
+      fprintf(stderr, "ERROR: fopen(): unable to open input file '%s': %s\n", input->value, strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+
+    fprintf(stderr, "successfully opened input file '%s' for reading!\n", input->value);
+  }
+
+  /* Setup the output. */
+  if (*output->value != 0) {
+    output_fp = fopen(output->value, "w");
+
+    if (output_fp == NULL) {
+      fprintf(stderr, "ERROR: fopen(): unable to open output file '%s': %s!\n", output->value, strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+
+    fprintf(stderr, "successfully opened output file '%s' for writing!\n", output->value);
+  }
+
+  zigma_cb_t* zigma_callback = zigma_encrypt;
+
+  char          buffer[1024];
+  unsigned long total = 0;
+  unsigned long count;
+
+  int output_base = strtoul(fmt->value, 0, 10);
+
+  while ((count = fread(buffer, 1, 1024, input_fp)) > 0) {
+    total += count;
+    zigma_callback(poem, buffer, count);
+
+    if (output_base == 256) {
+      fwrite(buffer, 1, count, output_fp);
+    }
+
+    fflush(output_fp);
+  }
+
+  fprintf(stderr, "complete! total of %lu bytes read/written\n", total);
+  fclose(output_fp);
+}
+
+void handle_decipher(kvlist_t** head)
+{
+  kvlist_t* input  = kvlist_search(head, "if");
+  kvlist_t* output = kvlist_search(head, "of");
+  kvlist_t* key    = kvlist_search(head, "key");
+  kvlist_t* fmt    = kvlist_search(head, "fmt");
+
+  DEBUG_ASSERT(input != NULL);
+  DEBUG_ASSERT(output != NULL);
+  DEBUG_ASSERT(key != NULL);
+  DEBUG_ASSERT(fmt != NULL);
+
+  char passkey[256] = {0};
+
+  unsigned long keylen = get_passwd(passkey, "enter passphrase: ");
+
+  zigma_t* poem = zigma_init(NULL, passkey, keylen);
+
+  zigma_print(poem);
+
+  FILE* input_fp  = stdin;
+  FILE* output_fp = stdout;
+
+  /* Setup the input. */
+  if (*input->value != 0) {
+    input_fp = fopen(input->value, "r");
+
+    if (input_fp == NULL) {
+      fprintf(stderr, "ERROR: fopen(): unable to open input file '%s': %s\n", input->value, strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+
+    fprintf(stderr, "successfully opened input file '%s' for reading!\n", input->value);
+  }
+
+  /* Setup the output. */
+  if (*output->value != 0) {
+    output_fp = fopen(output->value, "w");
+
+    if (output_fp == NULL) {
+      fprintf(stderr, "ERROR: fopen(): unable to open output file '%s': %s!\n", output->value, strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+
+    fprintf(stderr, "successfully opened output file '%s' for writing!\n", output->value);
+  }
+
+  zigma_cb_t* poem_callback = zigma_decrypt;
+
+  char          buffer[1024];
+  unsigned long total = 0;
+  unsigned long count;
+
+  int output_base = strtoul(fmt->value, 0, 10);
+
+  if (output_base == 256) {
+    while ((count = fread(buffer, 1, 1024, input_fp)) > 0) {
+      total += count;
+      poem_callback(poem, buffer, count);
+
+      fwrite(buffer, 1, count, output_fp);
+    }
+  }
+
+  fprintf(stderr, "complete! total of %lu bytes read/written\n", total);
+}
 int main(int argc, char const* argv[])
 {
   if (argc < 2) {
@@ -256,6 +402,18 @@ int main(int argc, char const* argv[])
   enum command_mode_t command = parse_command(&opt, argc, argv);
 
   kvlist_print(&opt);
+
+  switch (command) {
+    case MODE_ENCRYPT:
+      handle_cipher(&opt);
+      return 0;
+      break;
+
+    case MODE_DECRYPT:
+      handle_decipher(&opt);
+      return 0;
+      break;
+  }
 
   return 0;
 }
