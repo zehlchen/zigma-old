@@ -233,15 +233,27 @@ int parse_command(kvlist_t** head, int argc, char const* argv[])
 
   char const* modus = argv[1];
 
-#define _CMP(OPT, X)         \
-  if (strcmp(modus, X) == 0) \
-    command = OPT;
-
-  _CMP(MODE_ENCRYPT, "encode");
-  _CMP(MODE_DECRYPT, "decode");
-  _CMP(MODE_HASH, "hash");
-#undef _CMP
-
+  switch (modus[0]) {
+    case 'e':
+    case 'E':
+      command = MODE_ENCRYPT;
+      break;
+    case 'd':
+    case 'D':
+      command = MODE_DECRYPT;
+      break;
+    case 'h':
+    case 'H':
+      command = MODE_HASH;
+      break;
+    case 'r':
+    case 'R':
+      command = MODE_RANDOM;
+      break;
+    default:
+      command = MODE_NONE;
+      break;
+  }
   return command;
 }
 
@@ -256,21 +268,6 @@ void handle_cipher(kvlist_t** head)
   DEBUG_ASSERT(output != NULL);
   DEBUG_ASSERT(key != NULL);
   DEBUG_ASSERT(fmt != NULL);
-
-  char passkey[256]       = {0};
-  char passkey_retry[256] = {0};
-
-  unsigned long keylen       = get_passwd(passkey, "enter passphrase: ");
-  unsigned long keylen_retry = get_passwd(passkey_retry, "enter passphrase again: ");
-
-  if (keylen != keylen_retry || strcmp(passkey, passkey_retry) != 0) {
-    fprintf(stderr, "PASSWORD MISMATCH!\n");
-    exit(EXIT_FAILURE);
-  }
-
-  zigma_t* poem = zigma_init(NULL, passkey, keylen);
-
-  zigma_print(poem);
 
   FILE* input_fp  = stdin;
   FILE* output_fp = stdout;
@@ -298,6 +295,21 @@ void handle_cipher(kvlist_t** head)
 
     fprintf(stderr, "successfully opened output file '%s' for writing!\n", output->value);
   }
+
+  char passkey[256]       = {0};
+  char passkey_retry[256] = {0};
+
+  unsigned long keylen       = get_passwd(passkey, "enter passphrase: ");
+  unsigned long keylen_retry = get_passwd(passkey_retry, "enter passphrase again: ");
+
+  if (keylen != keylen_retry || strcmp(passkey, passkey_retry) != 0) {
+    fprintf(stderr, "PASSWORD MISMATCH!\n");
+    exit(EXIT_FAILURE);
+  }
+
+  zigma_t* poem = zigma_init(NULL, passkey, keylen);
+
+  zigma_print(poem);
 
   zigma_cb_t* zigma_callback = zigma_encrypt;
 
@@ -334,14 +346,6 @@ void handle_decipher(kvlist_t** head)
   DEBUG_ASSERT(key != NULL);
   DEBUG_ASSERT(fmt != NULL);
 
-  char passkey[256] = {0};
-
-  unsigned long keylen = get_passwd(passkey, "enter passphrase: ");
-
-  zigma_t* poem = zigma_init(NULL, passkey, keylen);
-
-  zigma_print(poem);
-
   FILE* input_fp  = stdin;
   FILE* output_fp = stdout;
 
@@ -368,6 +372,14 @@ void handle_decipher(kvlist_t** head)
 
     fprintf(stderr, "successfully opened output file '%s' for writing!\n", output->value);
   }
+
+  char passkey[256] = {0};
+
+  unsigned long keylen = get_passwd(passkey, "enter passphrase: ");
+
+  zigma_t* poem = zigma_init(NULL, passkey, keylen);
+
+  zigma_print(poem);
 
   zigma_cb_t* poem_callback = zigma_decrypt;
 
@@ -404,6 +416,11 @@ int main(int argc, char const* argv[])
   kvlist_print(&opt);
 
   switch (command) {
+    case MODE_NONE:
+      print_usage(argv[0]);
+      return 0;
+      break;
+
     case MODE_ENCRYPT:
       handle_cipher(&opt);
       return 0;
