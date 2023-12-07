@@ -29,6 +29,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "base64.h"
 #include "kvlist.h"
 #include "zigma.h"
 
@@ -81,7 +82,7 @@ void import_defaults(kvlist_t** head)
   _KV("key", "");
 
   /* Format override (normal: autodetect) binary, base16, base64 */
-  _KV("fmt", "256");
+  _KV("fmt", "64");
 #undef _KV
 }
 
@@ -313,18 +314,39 @@ void handle_cipher(kvlist_t** head)
 
   zigma_cb_t* zigma_callback = zigma_encrypt;
 
-  uint8  buffer[1024];
+  uint8  buffer[768];
   uint32 total = 0;
   uint32 count;
 
   int output_base = strtoul(fmt->value, 0, 10);
 
-  while ((count = fread(buffer, 1, 1024, input_fp)) > 0) {
+  while ((count = fread(buffer, 1, 768, input_fp)) > 0) {
     total += count;
     zigma_callback(poem, buffer, count);
 
-    if (output_base == 256) {
+    if (output_base == 256) { /* output as raw binary data */
       fwrite(buffer, 1, count, output_fp);
+    }
+    else if (output_base == 16) { /* complete a hex dump */
+      for (int i = 0; i < count; i++) {
+        fprintf(output_fp, "%02X", (unsigned char) buffer[i]);
+      }
+    }
+    else if (output_base == 64) { /* output as base64 encoded data */
+      char* encoded = malloc(count * 2);
+      base64_encode(encoded, (char*) buffer, count);
+
+      fprintf(output_fp, "##### BEGIN BASE64 ENCODED DATA #####\n");
+
+      for (int i = 0; i < count; i++) {
+        fprintf(output_fp, "%c", encoded[i]);
+        if ((i + 1) % 80 == 0)
+          fprintf(output_fp, "\n");
+      }
+
+      fprintf(output_fp, "\n##### END BASE64 ENCODED DATA #####\n");
+
+      free(encoded);
     }
 
     fflush(output_fp);
