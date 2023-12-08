@@ -59,7 +59,7 @@ void print_usage(char const* myself)
           "    if=FILE     input file (instead of STDIN)\n"
           "    of=FILE     output file (instead of STDOUT)\n"
           "    key=FILE    use a key file instead of PASSPHRASE\n"
-          "    fmt=BASE    format: 16 (hex dump) or 256 (raw binary)\n"
+          "    fmt=BASE    force format base: 16, 64, or 256\n"
           ""
           "\n"
           "N and BYTES may use one of the following multiplicative suffixes:\n"
