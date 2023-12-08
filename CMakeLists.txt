@@ -72,4 +72,5 @@ add_compile_definitions(
   GIT_COMMIT="${GIT_COMMIT}"
   GIT_BRANCH="${GIT_BRANCH}"
   GIT_TAG="${GIT_TAG}"
+  ZIGMA_VERSION_STRING="${PROJECT_VERSION}:${GIT_BUILD}"
 )

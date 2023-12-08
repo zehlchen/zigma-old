@@ -37,6 +37,10 @@ typedef long long sint64;
 
 #define ZIGMA_VERSION "1.2.0"
 
+#ifndef ZIGMA_VERSION_STRING
+#define ZIGMA_VERSION_STRING "ZIGMA " ZIGMA_VERSION
+#endif 
+
 /*
  * Debug code ... respect no-debug requests.
  */

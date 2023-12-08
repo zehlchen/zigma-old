@@ -479,7 +479,7 @@ int main(int argc, char const* argv[])
     return 0;
   }
 
-  fprintf(stderr, "--- ZIGMA version %s ... \n", ZIGMA_VERSION);
+  fprintf(stderr, "--- ZIGMA version %s ... \n", ZIGMA_VERSION_STRING);
   fprintf(stderr, ">>> WARNING: SENSITIVE DIAGNOSTIC DATA. USE WITH CAUTION!\n");
   kvlist_t* opt = NULL;
 
