@@ -98,17 +98,15 @@ unsigned long get_passwd(uint8* buffer, uint8* prompt)
 
   tcgetattr(STDIN_FILENO, &old_term);
   new_term = old_term;
-#endif /* __linux__ */
 
-  int index = 0;
-
-#ifdef __linux__
   new_term.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
 #endif /* __linux__ */
 
   fprintf(stderr, "%s", prompt);
-
+  
+  int index = 0;
+  
   while (1) {
     char ch = getchar();
     if (ch == '\n' || ch == '\r') { // Enter key
