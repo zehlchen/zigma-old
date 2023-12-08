@@ -80,9 +80,6 @@ uint32 str2bytes(char const* str);
 /* Duplicate a string safely */
 char* safe_strdup(char const* str);
 
-/* Case insensitive comapre */
-int stricmp(char const* left, char const* right);
-
 /* Get rid of something for good */
 void memnull(void* ptr, uint32 size);
 

@@ -26,8 +26,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <termios.h>
 #include <unistd.h>
+
+#ifdef __linux__
+#include <termios.h>
+#endif
 
 #include "base64.h"
 #include "kvlist.h"
@@ -89,16 +92,20 @@ void import_defaults(kvlist_t** head)
 
 unsigned long get_passwd(uint8* buffer, uint8* prompt)
 {
+#ifdef __linux__
   struct termios old_term;
   struct termios new_term;
 
   tcgetattr(STDIN_FILENO, &old_term);
   new_term = old_term;
+#endif /* __linux__ */
 
   int index = 0;
 
+#ifdef __linux__
   new_term.c_lflag &= ~(ECHO | ICANON);
   tcsetattr(STDIN_FILENO, TCSANOW, &new_term);
+#endif /* __linux__ */
 
   fprintf(stderr, "%s", prompt);
 
@@ -120,7 +127,9 @@ unsigned long get_passwd(uint8* buffer, uint8* prompt)
     }
   }
 
+#ifdef __linux__
   tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
+#endif /* __linux__ */
 
   fprintf(stderr, "\r\n");
 
