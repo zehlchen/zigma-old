@@ -182,8 +182,6 @@ char* safe_strdup(char const* str)
 
 int stricmp(char const* p1, char const* p2)
 {
-  fprintf(stderr, "debug: stricmp: '%s' <=> '%s'\n", p1, p2);
-
   if (p1 == p2)
     return 0;
 
@@ -310,6 +308,10 @@ void handle_cipher(kvlist_t** head)
 
   zigma_t* poem = zigma_init(NULL, passkey, keylen);
 
+  /* Purge passphrase from memory */
+  memnull(passkey, 256);
+  memnull(passkey_retry, 256);
+
   zigma_print(poem);
 
   zigma_cb_t* zigma_callback = zigma_encrypt;
@@ -397,10 +399,12 @@ void handle_decipher(kvlist_t** head)
   }
 
   uint8    passkey[256] = {0};
-  uint32   keylen       = get_passwd(passkey, (uint8 *) "enter passphrase: ");
+  uint32   keylen       = get_passwd(passkey, (uint8*) "enter passphrase: ");
   zigma_t* poem         = zigma_init(NULL, passkey, keylen);
 
   zigma_print(poem);
+  /* Clear the passphrase from memory */
+  memnull(passkey, 256);
 
   zigma_cb_t* poem_callback = zigma_decrypt;
 
