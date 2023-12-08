@@ -290,7 +290,7 @@ void handle_cipher(kvlist_t** head)
       exit(EXIT_FAILURE);
     }
 
-    fprintf(stderr, "successfully opened input file '%s' for reading!\n", input->value);
+    fprintf(stderr, "Successfully opened input file '%s' for reading!\n", input->value);
   }
 
   /* Setup the output. */
@@ -302,7 +302,7 @@ void handle_cipher(kvlist_t** head)
       exit(EXIT_FAILURE);
     }
 
-    fprintf(stderr, "successfully opened output file '%s' for writing!\n", output->value);
+    fprintf(stderr, "Successfully opened output file '%s' for writing!\n", output->value);
   }
 
   uint8 passkey[256]       = {0};
@@ -319,7 +319,7 @@ void handle_cipher(kvlist_t** head)
 
     fclose(input_fp);
     fclose(output_fp);
-    
+
     exit(EXIT_FAILURE);
   }
 
@@ -337,6 +337,9 @@ void handle_cipher(kvlist_t** head)
 
   int output_base = strtoul(fmt->value, 0, 10);
 
+  if (output_base == 64)
+    fprintf(output_fp, "##### BEGIN BASE64 ENCODED DATA #####\n");
+
   while ((count = fread(buffer, 1, 768, input_fp)) > 0) {
     total += count;
     zigma_callback(poem, buffer, count);
@@ -353,8 +356,6 @@ void handle_cipher(kvlist_t** head)
       char* encoded = malloc(count * 2);
       base64_encode(encoded, (char*) buffer, count);
 
-      fprintf(output_fp, "##### BEGIN BASE64 ENCODED DATA #####\n");
-
       for (int i = 0; i < count; i++) {
         fprintf(output_fp, "%c", encoded[i]);
 
@@ -362,15 +363,16 @@ void handle_cipher(kvlist_t** head)
           fprintf(output_fp, "\n");
       }
 
-      fprintf(output_fp, "\n##### END BASE64 ENCODED DATA #####\n");
-
       free(encoded);
     }
 
     fflush(output_fp);
   }
 
-  fprintf(stderr, "complete! total of %u bytes read/written\n", total);
+  if (output_base == 64)
+    fprintf(output_fp, "\n##### END BASE64 ENCODED DATA #####\n");
+
+  fprintf(stderr, "Complete! Total of %u bytes read/written\n", total);
   fclose(output_fp);
 }
 
@@ -398,7 +400,7 @@ void handle_decipher(kvlist_t** head)
       exit(EXIT_FAILURE);
     }
 
-    fprintf(stderr, "successfully opened input file '%s' for reading!\n", input->value);
+    fprintf(stderr, "Successfully opened input file '%s' for reading!\n", input->value);
   }
 
   /* Setup the output. */
@@ -410,7 +412,7 @@ void handle_decipher(kvlist_t** head)
       exit(EXIT_FAILURE);
     }
 
-    fprintf(stderr, "successfully opened output file '%s' for writing!\n", output->value);
+    fprintf(stderr, "Successfully opened output file '%s' for writing!\n", output->value);
   }
 
   uint8    passkey[256] = {0};
@@ -438,7 +440,7 @@ void handle_decipher(kvlist_t** head)
     }
   }
 
-  fprintf(stderr, "complete! total of %u bytes read/written\n", total);
+  fprintf(stderr, "Complete! Total of %u bytes read/written\n", total);
 }
 
 void handle_checksum(kvlist_t** head)
@@ -462,7 +464,7 @@ void handle_checksum(kvlist_t** head)
       exit(EXIT_FAILURE);
     }
 
-    fprintf(stderr, "successfully opened input file '%s' for reading!\n", input->value);
+    fprintf(stderr, "Successfully opened input file '%s' for reading!\n", input->value);
   }
 
   zigma_cb_t* zigma_callback = zigma_encrypt;
