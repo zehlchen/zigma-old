@@ -54,9 +54,6 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-
-string(REGEX REPLACE "\n$" "" GIT_BUILD "${GIT_BUILD}")
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(zigma)
