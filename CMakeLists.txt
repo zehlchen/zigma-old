@@ -22,14 +22,38 @@
 cmake_minimum_required(VERSION 3.16)
 
 project (zigma
-  VERSION 1.2.1
-  DESCRIPTION "ZIGMA"
+  VERSION 1.2.2
+  DESCRIPTION "ZIGMA is a command line utility for encrypting, decrypting, and signing files."
 )
 
-execute_process(COMMAND git rev-list --count HEAD
+execute_process(
+  COMMAND git rev-list --count HEAD
   OUTPUT_VARIABLE GIT_BUILD
+  OUTPUT_STRIP_TRAILING_WHITESPACE
   ERROR_QUIET
 )
+
+execute_process(
+  COMMAND git log -1 --format=%h
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  OUTPUT_VARIABLE GIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(
+  COMMAND git rev-parse --abbrev-ref HEAD
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  OUTPUT_VARIABLE GIT_BRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(
+  COMMAND git describe --tags --abbrev=0
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  OUTPUT_VARIABLE GIT_TAG
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 
 string(REGEX REPLACE "\n$" "" GIT_BUILD "${GIT_BUILD}")
 
@@ -41,4 +65,11 @@ target_sources(zigma PRIVATE
   zigma/driver.c
   zigma/kvlist.c
   zigma/zigma.c
+)
+
+add_compile_definitions(
+  GIT_BUILD="${GIT_BUILD}"
+  GIT_COMMIT="${GIT_COMMIT}"
+  GIT_BRANCH="${GIT_BRANCH}"
+  GIT_TAG="${GIT_TAG}"
 )
