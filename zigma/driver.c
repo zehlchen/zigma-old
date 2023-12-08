@@ -300,8 +300,8 @@ void handle_cipher(kvlist_t** head)
   uint8 passkey[256]       = {0};
   uint8 passkey_retry[256] = {0};
 
-  unsigned long keylen       = get_passwd(passkey, "enter passphrase: ");
-  unsigned long keylen_retry = get_passwd(passkey_retry, "enter passphrase again: ");
+  uint32 keylen       = get_passwd(passkey, (uint8*) "enter passphrase: ");
+  uint32 keylen_retry = get_passwd(passkey_retry, (uint8*) "enter passphrase again: ");
 
   if (keylen != keylen_retry || strcmp((char*) passkey, (char*) passkey_retry) != 0) {
     fprintf(stderr, "PASSWORD MISMATCH!\n");
@@ -340,6 +340,7 @@ void handle_cipher(kvlist_t** head)
 
       for (int i = 0; i < count; i++) {
         fprintf(output_fp, "%c", encoded[i]);
+
         if ((i + 1) % 80 == 0)
           fprintf(output_fp, "\n");
       }
@@ -395,11 +396,9 @@ void handle_decipher(kvlist_t** head)
     fprintf(stderr, "successfully opened output file '%s' for writing!\n", output->value);
   }
 
-  uint8 passkey[256] = {0};
-
-  uint32 keylen = get_passwd(passkey, "enter passphrase: ");
-
-  zigma_t* poem = zigma_init(NULL, passkey, keylen);
+  uint8    passkey[256] = {0};
+  uint32   keylen       = get_passwd(passkey, (uint8 *) "enter passphrase: ");
+  zigma_t* poem         = zigma_init(NULL, passkey, keylen);
 
   zigma_print(poem);
 
