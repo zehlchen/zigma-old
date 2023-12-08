@@ -313,14 +313,19 @@ void handle_cipher(kvlist_t** head)
 
   if (keylen != keylen_retry || strcmp((char*) passkey, (char*) passkey_retry) != 0) {
     fprintf(stderr, "PASSWORD MISMATCH!\n");
+
+    memnull(passkey, 256);
+    memnull(passkey_retry, 256);
+
+    fclose(input_fp);
+    fclose(output_fp);
+    
     exit(EXIT_FAILURE);
   }
 
   zigma_t* poem = zigma_init(NULL, passkey, keylen);
 
   /* Purge passphrase from memory */
-  memnull(passkey, 256);
-  memnull(passkey_retry, 256);
 
   zigma_print(poem);
 
