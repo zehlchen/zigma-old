@@ -104,9 +104,9 @@ unsigned long get_passwd(uint8* buffer, uint8* prompt)
 #endif /* __linux__ */
 
   fprintf(stderr, "%s", prompt);
-  
+
   int index = 0;
-  
+
   while (1) {
     char ch = getchar();
     if (ch == '\n' || ch == '\r') { // Enter key
@@ -482,7 +482,7 @@ void handle_checksum(kvlist_t** head)
 
   fprintf(stderr, "%s (%u bytes): ", input->value, total);
   for (int j = 0; j < 24; j++)
-    fprintf(stderr, "%02X", (unsigned char) checksum[j]);
+    fprintf(stderr, "%02x", (unsigned char) checksum[j]);
 
   fprintf(stderr, "\n");
 }
@@ -520,6 +520,11 @@ int main(int argc, char const* argv[])
 
     case MODE_HASH:
       handle_checksum(&opt);
+      return 0;
+      break;
+
+    case MODE_RANDOM:
+      fprintf(stderr, "Not implemented yet!\n");
       return 0;
       break;
   }
