@@ -103,7 +103,7 @@ unsigned int buffer_sanitize(char* output, char const* input, unsigned long leng
       continue;
     }
 
-    if (!in_comment && ch != ' ' && ch != '\t') {
+    if (!in_comment && ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r') {
       output[output_length++] = ch;
     }
   }
