@@ -28,9 +28,7 @@
 #include "base64.h"
 #include "zigma.h"
 
-static const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                   "abcdefghijklmnopqrstuvwxyz"
-                                   "0123456789+/";
+static const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 unsigned int base64_encode(char* data, char const* buffer, unsigned long length)
 {
@@ -58,10 +56,6 @@ unsigned int base64_encode(char* data, char const* buffer, unsigned long length)
 
   data[output_length] = '\0';
 
-  /*
-  fprintf(stderr, "count %lu / %lu <%s>\n", length, output_length, data);
-  */
-
   return output_length;
 }
 
@@ -77,6 +71,7 @@ unsigned char base64_char_value(char c)
     return 62;
   if (c == '/')
     return 63;
+
   return -1;
 }
 
@@ -84,6 +79,9 @@ unsigned char base64_char_value(char c)
 unsigned int buffer_sanitize(char* output, char const* input, unsigned long length)
 {
   DEBUG_ASSERT(input != NULL);
+
+  if (length == 0)
+    return 0;
 
   if (output == NULL)
     output = malloc(length);
@@ -109,7 +107,9 @@ unsigned int buffer_sanitize(char* output, char const* input, unsigned long leng
       output[output_length++] = ch;
     }
   }
+
   output[output_length] = '\0';
+
   return output_length;
 }
 
