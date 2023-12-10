@@ -91,7 +91,7 @@ unsigned char base64_char_value(char c)
  *  @param length The length of the input buffer.
  *  @return The length of the output buffer.
  */
-unsigned int buffer_sanitize(char* output, char const* input, unsigned long length)
+unsigned int base64_sanitize(char* output, char const* input, unsigned long length)
 {
   DEBUG_ASSERT(input != NULL);
 
