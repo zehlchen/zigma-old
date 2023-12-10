@@ -30,6 +30,12 @@
 
 static const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+/* Encode a buffer to base64.
+ *  @param data The output buffer, or NULL to allocate one.
+ *  @param buffer The input buffer.
+ *  @param length The length of the input buffer.
+ *  @return The length of the output buffer.
+ */
 unsigned int base64_encode(char* data, char const* buffer, unsigned long length)
 {
   unsigned long output_length = 4 * ((length + 2) / 3);
@@ -59,6 +65,10 @@ unsigned int base64_encode(char* data, char const* buffer, unsigned long length)
   return output_length;
 }
 
+/* Convert a base64 character to its integer value.
+ *  @param c The base64 character to convert.
+ *  @return The integer value.
+ */
 unsigned char base64_char_value(char c)
 {
   if (c >= 'A' && c <= 'Z')
@@ -75,7 +85,12 @@ unsigned char base64_char_value(char c)
   return -1;
 }
 
-/* Get rid of the newlines and comments. */
+/* Sanitize a buffer by removing comments and whitespace.
+ *  @param output The output buffer, or NULL to allocate one.
+ *  @param input The input buffer.
+ *  @param length The length of the input buffer.
+ *  @return The length of the output buffer.
+ */
 unsigned int buffer_sanitize(char* output, char const* input, unsigned long length)
 {
   DEBUG_ASSERT(input != NULL);
@@ -113,6 +128,12 @@ unsigned int buffer_sanitize(char* output, char const* input, unsigned long leng
   return output_length;
 }
 
+/* Decode a base64 buffer.
+ *  @param data The output buffer, or NULL to allocate one.
+ *  @param buffer The input buffer.
+ *  @param length The length of the input buffer.
+ *  @return The length of the output buffer.
+ */
 unsigned int base64_decode(char* data, char const* buffer, unsigned long length)
 {
   if (length % 4 != 0)
