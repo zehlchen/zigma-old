@@ -38,11 +38,19 @@ typedef struct matrix_t {
   /* Maximum length of data block. */
   uint32 capacity;
 
-  /* The square root of the capacity. */
+  /* The square root of the length. */
   uint32 magnitude;
 
   /* The data block. */
   uint8* data;
 } matrix_t;
+
+matrix_t* matrix_init(matrix_t* matrix, uint32 size_request);
+matrix_t* matrix_destroy(matrix_t* matrix);
+matrix_t* matrix_resize(matrix_t* matrix, uint32 size_request);
+
+uint32 matrix_smallest_magnitude(uint32 request_size);
+
+void matrix_print(matrix_t* matrix);
 
 #endif // _ZIGMA_MATRIX_H_

@@ -43,15 +43,24 @@ matrix_t* matrix_init(matrix_t* matrix, uint32 size_request)
 
   DEBUG_ASSERT(matrix != NULL);
 
+  if (size_request == 0) {
+    matrix->length    = 0;
+    matrix->capacity  = 0;
+    matrix->magnitude = 0;
+    matrix->data      = NULL;
+
+    return matrix;
+  }
+
   uint32 magnitude = matrix_smallest_magnitude(size_request);
-  uint32 capacity = (magnitude * magnitude) > 1024*1024 ? magnitude * magnitude : 1024*1024; // 1MB minimum
+  uint32 capacity  = (magnitude * magnitude) > 1024 * 1024 ? magnitude * magnitude : 1024 * 1024; // 1MB minimum
 
   matrix->data = (uint8*) malloc(capacity * sizeof(uint8));
 
   DEBUG_ASSERT(matrix->data != NULL);
 
-  matrix->length = size_request;
-  matrix->capacity = capacity;
+  matrix->length    = size_request;
+  matrix->capacity  = capacity;
   matrix->magnitude = magnitude;
 
   return matrix;
@@ -75,30 +84,32 @@ matrix_t* matrix_destroy(matrix_t* matrix)
 }
 
 /* Resizes a matrix object to at least size_request bytes. If the matrix is
-  * already large enough, it will not be resized. 
-  *   @param matrix The matrix object to resize.
-  *   @param size_request The number of bytes to be stored in the matrix.
-  *   @return The resized matrix object.
-  *   @note The matrix object will be allocated with a capacity of at least 1 MB.
-  */
+ * already large enough, it will not be resized.
+ *   @param matrix The matrix object to resize.
+ *   @param size_request The number of bytes to be stored in the matrix.
+ *   @return The resized matrix object.
+ *   @note The matrix object will be allocated with a capacity of at least 1 MB.
+ */
 matrix_t* matrix_resize(matrix_t* matrix, uint32 size_request)
 {
   DEBUG_ASSERT(matrix != NULL);
 
-  if (size_request == 0)
-    return matrix_destroy(matrix);
-
-  if (size_request <= matrix->capacity)
-    return matrix;
-
   uint32 magnitude = matrix_smallest_magnitude(size_request);
-  uint32 capacity = (magnitude * magnitude) > 1024*1024 ? magnitude * magnitude : 1024*1024; // 1MB minimum
- 
+
+  if (size_request <= matrix->capacity) {
+    matrix->length    = size_request;
+    matrix->magnitude = magnitude;
+
+    return matrix;
+  }
+
+  uint32 capacity = (magnitude * magnitude) > 1024 * 1024 ? magnitude * magnitude : 1024 * 1024; // 1MB minimum
+
   matrix->data = (uint8*) realloc(matrix->data, capacity * sizeof(uint8));
 
   DEBUG_ASSERT(matrix->data != NULL);
 
-  matrix->capacity = capacity;
+  matrix->capacity  = capacity;
   matrix->magnitude = magnitude;
 
   return matrix;
@@ -116,9 +127,21 @@ uint32 matrix_smallest_magnitude(uint32 request_size)
 
   if (request_size == 0)
     return 0;
-  
+
   while (magnitude * magnitude < request_size)
     magnitude++;
 
   return magnitude;
+}
+
+void matrix_print(matrix_t* matrix)
+{
+  DEBUG_ASSERT(matrix != NULL);
+
+  fprintf(stderr, "matrix[] = {\n");
+  fprintf(stderr, "  length = %d\n", matrix->length);
+  fprintf(stderr, "  capacity = %d\n", matrix->capacity);
+  fprintf(stderr, "  magnitude = %d (%d ^2)\n", matrix->magnitude, matrix->magnitude * matrix->magnitude);
+  fprintf(stderr, "  data = %p\n", matrix->data);
+  fprintf(stderr, "}\n");
 }
