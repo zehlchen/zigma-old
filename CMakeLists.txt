@@ -61,6 +61,7 @@ target_sources(zigma PRIVATE
   zigma/base64.c
   zigma/driver.c
   zigma/kvlist.c
+  zigma/matrix.c
   zigma/zigma.c
 )
 
