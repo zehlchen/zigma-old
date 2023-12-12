@@ -34,6 +34,7 @@
 
 #include "base64.h"
 #include "kvlist.h"
+#include "matrix.h"
 #include "zigma.h"
 
 enum command_mode_t {
@@ -321,11 +322,14 @@ void handle_cipher(kvlist_t** head)
     exit(EXIT_FAILURE);
   }
 
-  zigma_t* poem = zigma_init(NULL, passkey, keylen);
+  zigma_t*  ziggy  = zigma_init(NULL, passkey, keylen);
+  matrix_t* matrix = matrix_init(NULL, 0);
+
+  zigma_print(ziggy);
 
   /* Purge passphrase from memory */
-
-  zigma_print(poem);
+  memnull(passkey, 256);
+  memnull(passkey_retry, 256);
 
   zigma_cb_t* zigma_callback = zigma_encrypt;
 
@@ -337,41 +341,51 @@ void handle_cipher(kvlist_t** head)
 
   if (output_base == 64)
     fprintf(output_fp, "##### BEGIN BASE64 ENCODED DATA #####\n");
+  else if (output_base == 16)
+    fprintf(output_fp, "##### BEGIN BASE16 ENCODED DATA #####\n");
 
   while ((count = fread(buffer, 1, 768, input_fp)) > 0) {
+    matrix_resize(matrix, count + total);
+    memcpy(matrix->data + total, buffer, count);
+
     total += count;
-    zigma_callback(poem, buffer, count);
-
-    if (output_base == 256) { /* output as raw binary data */
-      fwrite(buffer, 1, count, output_fp);
-    }
-    else if (output_base == 16) { /* complete a hex dump */
-      for (int i = 0; i < count; i++) {
-        fprintf(output_fp, "%02X", (unsigned char) buffer[i]);
-      }
-    }
-    else if (output_base == 64) { /* output as base64 encoded data */
-      char* encoded = malloc(count * 2);
-      base64_encode(encoded, (char*) buffer, count);
-
-      for (int i = 0; i < count; i++) {
-        fprintf(output_fp, "%c", encoded[i]);
-
-        if ((i + 1) % 80 == 0)
-          fprintf(output_fp, "\n");
-      }
-
-      free(encoded);
-    }
-
-    fflush(output_fp);
   }
 
-  if (output_base == 64)
-    fprintf(output_fp, "\n##### END BASE64 ENCODED DATA #####\n");
+  matrix_print(matrix);
 
-  fprintf(stderr, "Complete! Total of %u bytes read/written\n", total);
-  fclose(output_fp);
+  zigma_callback(ziggy, matrix->data, total);
+
+  if (output_base == 256) {
+    fwrite(matrix->data, 1, total, output_fp);
+  }
+  else if (output_base == 16) {
+    for (int i = 0; i < total; i++) {
+      fprintf(output_fp, "%02X", (unsigned char) buffer[i]);
+    }
+  }
+  else if (output_base == 64) {
+    char* encoded = malloc(total * 2);
+    base64_encode(encoded, (char*) matrix->data, total);
+
+    for (int i = 0; i < total; i++) {
+      fprintf(output_fp, "%c", encoded[i]);
+
+      if ((i + 1) % 80 == 0)
+        fprintf(output_fp, "\n");
+    }
+
+    free(encoded);
+
+    fflush(output_fp);
+
+    if (output_base == 64)
+      fprintf(output_fp, "\n##### END BASE64 ENCODED DATA #####\n");
+    else if (output_base == 16)
+      fprintf(output_fp, "\n##### END BASE16 ENCODED DATA #####\n");
+
+    fprintf(stderr, "Complete! Total of %u bytes read/written\n", total);
+    fclose(output_fp);
+  }
 }
 
 void handle_decipher(kvlist_t** head)
