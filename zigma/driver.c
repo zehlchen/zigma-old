@@ -340,9 +340,9 @@ void handle_cipher(kvlist_t** head)
   int output_base = strtoul(fmt->value, 0, 10);
 
   if (output_base == 64)
-    fprintf(output_fp, "##### BEGIN BASE64 ENCODED DATA #####\n");
+    fprintf(output_fp, "##### BEGIN BASE64 #####\n");
   else if (output_base == 16)
-    fprintf(output_fp, "##### BEGIN BASE16 ENCODED DATA #####\n");
+    fprintf(output_fp, "##### BEGIN BASE16 #####\n");
 
   while ((count = fread(buffer, 1, 768, input_fp)) > 0) {
     matrix_resize(matrix, count + total);
@@ -379,9 +379,9 @@ void handle_cipher(kvlist_t** head)
     fflush(output_fp);
 
     if (output_base == 64)
-      fprintf(output_fp, "\n##### END BASE64 ENCODED DATA #####\n");
+      fprintf(output_fp, "\n##### END BASE64 #####\n");
     else if (output_base == 16)
-      fprintf(output_fp, "\n##### END BASE16 ENCODED DATA #####\n");
+      fprintf(output_fp, "\n##### END BASE16 #####\n");
 
     fprintf(stderr, "Complete! Total of %u bytes read/written\n", total);
     fclose(output_fp);
@@ -427,29 +427,33 @@ void handle_decipher(kvlist_t** head)
     fprintf(stderr, "Successfully opened output file '%s' for writing!\n", output->value);
   }
 
-  uint8    passkey[256] = {0};
-  uint32   keylen       = get_passwd(passkey, (uint8*) "enter passphrase: ");
-  zigma_t* poem         = zigma_init(NULL, passkey, keylen);
-
-  zigma_print(poem);
-  /* Clear the passphrase from memory */
-  memnull(passkey, 256);
+  uint8     passkey[256] = {0};
+  uint32    keylen       = get_passwd(passkey, (uint8*) "enter passphrase: ");
+  zigma_t*  ziggy        = zigma_init(NULL, passkey, keylen);
+  matrix_t* matrix       = matrix_init(NULL, 0);
 
   zigma_cb_t* poem_callback = zigma_decrypt;
 
-  uint8  buffer[1024];
+  zigma_print(ziggy);
+  matrix_print(matrix);
+
+  uint8  buffer[768];
   uint32 total = 0;
   uint32 count;
 
   int output_base = strtoul(fmt->value, 0, 10);
 
-  if (output_base == 256) {
-    while ((count = fread(buffer, 1, 1024, input_fp)) > 0) {
-      total += count;
-      poem_callback(poem, buffer, count);
+  while ((count = fread(buffer, 1, 768, input_fp)) > 0) {
+    matrix_resize(matrix, count + total);
+    memcpy(matrix->data + total, buffer, count);
 
-      fwrite(buffer, 1, count, output_fp);
-    }
+    total += count;
+  }
+
+  poem_callback(ziggy, matrix->data, total);
+
+  if (output_base == 256) {
+    fwrite(matrix->data, 1, total, output_fp);
   }
 
   fprintf(stderr, "Complete! Total of %u bytes read/written\n", total);
