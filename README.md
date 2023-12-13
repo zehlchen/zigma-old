@@ -1,28 +1,42 @@
 # ZIGMA - Zehl's Enigma Machine
-ZIGMA is the implementation and evolution of a stream cipher dedicated to the public domain
-by Michael Paul Johnson on the newsgroup *sci.crypt.research* in 1995. ZIGMA is used to send
-secure messages over insecure plaintext networks like SMS, HTTP, SMTP. The program works in a
-way similar to the UNIX command 'dd'.
+## Introduction
+In January, 1995, Michael Paul Johnson wrote a post on the newsgroup *sci.crypt.research* about
+a novel stream cipher he had concieved and dedicated to the public domain that could most readily 
+be visualized as an enigma machine with 256 rotors that was rewired after each byte of data. 
 
-While the goal of this project is to provide for encrypted ASCII bar codes, the software is of
-course equally useful with binary data. Instead of the customary Base64 encoding, the program
-allows for the user to have input and output as Base256 (raw) or Base16 (hex). 
+This program is the reimagination of this cipher and hopes to provide a reasonably secure way of
+sending enciphered messages over plaintext networks like SMS and QR codes or posts to forums, social
+media, etc. This program uses the cipher, called ZIGMA, and the feedback of its state machine (the POEM method) to create ciphertext and attempt to obfuscate the ciphertext output.
 
-This project has two parallel avenues or pillars of research and development, and associated 
-theoretical applications.
- * The ZIGMA Cipher, a fully-functional LFSR/stream cipher
- * The POEM Method, a useful tool for transmitting over insecure plaintext networks like SMS.
+Without the key (either a passphrase or a 256-byte key file), the existence of encrypted data is
+hard to prove, and the reshuffling of bytes in the output stream makes cryptanalysis much more
+difficult and resource-intensive.
 
-The combination of these two paths will (ideally) allow the user to store their data in a dense 
-matrix that is both encrypted and (theoretically) highly resistant to cryptanalysis. These messages
-can then be transmitted over insecure media with the security of a one-time pad. 
+The program has been developed to function similarly to the UNIX utility 'dd'.
 
-## The ZIGMA Cipher
-This stream cipher is a state machine with five indexes and a 2048-bit permutation vector. Each
-byte encrypted causes "perturbations" to the state machine. There is plaintext and ciphertext
-feedback.  
+## Command Line Interface
 
-## The POEM Method
-The POEM method (Pattern Obfuscation and Encapsulation Matrix) is a technique for hiding data
-inside a cryptographic-quality container. The method involes manipulation of a matrix in a four
-dimensional field.
+~~~
+$ zigma MODE [OPERAND KEY=VALUE]...
+~~~
+
+ `MODE` must be one of the following:
+ * `e` or `E` (as in "encipher"): create a cryptogram 
+ * `d` or `D` (as in "decipher"): restore a cryptogram
+ * `h` or `H` (as in "hash"): generate a cryptographic checksum
+
+and `OPERAND` may be any of the following
+ * `if=FILE` stream the input from `FILE` instead of `<STDIN>`
+ * `of=FILE` stream the output to `FILE` instead of `<STDOUT>`
+ * `key=FILE` read *up to* the first 256 bytes of `FILE` instead of a passphrase
+ * `fmt=BASE` one of `16` (hex dump), `64` (base-64 encoding), or `256` (no formatting, raw)
+
+This should be familiar to anyone who has worked around a UNIX shell.
+
+## Design Notes & Considerations
+This program was written with the following assumptions (or caveats):
+
+1. The maximum length of a cryptogram must be less than 4GB (2^32).
+2. The key or passphrase is secret, unique, and secure.
+3. The plaintext is encoded in UTF-8.
+4. The ciphertext is transmitted over a plain, insecure network.
