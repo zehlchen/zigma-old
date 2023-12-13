@@ -189,26 +189,6 @@ char* safe_strdup(char const* str)
   return copy;
 }
 
-int stricmp(char const* p1, char const* p2)
-{
-  if (p1 == p2)
-    return 0;
-
-  while (*p1 && *p2) {
-    int ch1 = tolower((unsigned char) *p1);
-    int ch2 = tolower((unsigned char) *p2);
-
-    if (ch1 != ch2) {
-      return ch1 - ch2;
-    }
-
-    p1++;
-    p2++;
-  }
-
-  return tolower((unsigned char) *p1) - tolower((unsigned char) *p2);
-}
-
 void memnull(void* ptr, uint32 size)
 {
   volatile unsigned char* _ptr = ptr;
