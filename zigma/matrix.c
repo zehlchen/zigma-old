@@ -141,7 +141,7 @@ void matrix_print(matrix_t* matrix)
   fprintf(stderr, "matrix[] = {\n");
   fprintf(stderr, "  length = %d\n", matrix->length);
   fprintf(stderr, "  capacity = %d\n", matrix->capacity);
-  fprintf(stderr, "  magnitude = %d (%d ^2)\n", matrix->magnitude, matrix->magnitude * matrix->magnitude);
+  fprintf(stderr, "  magnitude = %d (%d^2^)\n", matrix->magnitude, matrix->magnitude * matrix->magnitude);
   fprintf(stderr, "  data = %p\n", matrix->data);
   fprintf(stderr, "}\n");
 }

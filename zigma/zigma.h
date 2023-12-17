@@ -39,7 +39,21 @@ typedef long long sint64;
 
 #ifndef ZIGMA_VERSION_STRING
 #define ZIGMA_VERSION_STRING "ZIGMA " ZIGMA_VERSION
-#endif 
+
+
+
+
+
+
+
+
+
+#endif
+
+/* Define the length in bytes of the checksum. */
+#ifndef ZIGMA_CHECKSUM_SIZE
+#define ZIGMA_CHECKSUM_SIZE 32 /* 256 bits */
+#endif
 
 /*
  * Debug code ... respect no-debug requests.
@@ -97,31 +111,19 @@ typedef struct {
   uint8 pv[256]; /* 256-byte permutation vector */
 } zigma_t;
 
-/* Initialize a zigma_t handle. If handle is NULL, allocate. */
 zigma_t* zigma_init(zigma_t* handle, uint8 const* key, uint32 length);
-
-/* Prepare the handle with a standardized starting point for hash function. */
 zigma_t* zigma_init_hash(zigma_t* handle);
 
-/* Terminate the state for the purpose of generating a checksum. */
 void zigma_hash_sign(zigma_t* handle, uint8* data, uint32 length);
 
-/* Encrypt a single byte. */
 unsigned char zigma_encrypt_byte(zigma_t* handle, uint32 z);
-
-/* Decrypt a single byte. */
 unsigned char zigma_decrypt_byte(zigma_t* handle, uint32 z);
 
-/* Encrypt a block of data. */
 void zigma_encrypt(zigma_t* handle, uint8* data, uint32 size);
-
-/* Decrypt a block of data. */
 void zigma_decrypt(zigma_t* handle, uint8* data, uint32 size);
 
-/* Perturb the state with a given key. */
 uint8 zigma_keyrand(zigma_t* handle, uint32 limit, uint8 const* key, uint32 length, uint8* rsum, uint32* keypos);
 
-/* Output diagnostic data. */
-void  zigma_print(zigma_t* handle);
+void zigma_print(zigma_t* handle);
 
 #endif // _ZIGMA_ZIGMA_H_
