@@ -39,15 +39,6 @@ typedef long long sint64;
 
 #ifndef ZIGMA_VERSION_STRING
 #define ZIGMA_VERSION_STRING "ZIGMA " ZIGMA_VERSION
-
-
-
-
-
-
-
-
-
 #endif
 
 /* Define the length in bytes of the checksum. */
@@ -102,13 +93,24 @@ void memnull(void* ptr, uint32 size);
  */
 
 /* Cryptographic state machine handle. */
-typedef struct {
-  uint8 radix;   /* The first index (smooth, gradual) */
-  uint8 pride;   /* The second index (erratic shift) */
-  uint8 chasm;   /* The third index (highly dependent) */
-  uint8 left;    /* The last plaintext state */
-  uint8 right;   /* The last ciphertext state */
-  uint8 pv[256]; /* 256-byte permutation vector */
+typedef struct zigma_t {
+  /* Index A rotates smoothly between bytes. */
+  uint8 index_A;
+
+  /* Index B varies in an erratic manner. */
+  uint8 index_B;
+
+  /* Index C depends heavily on the previous input. */
+  uint8 index_C;
+
+  /* The last plaintext byte. */
+  uint8 byte_X;
+
+  /* The last ciphertext byte. */
+  uint8 byte_Y;
+
+  /* The permutation vector. */
+  uint8 vektor[256]; /* 256-byte permutation vector */
 } zigma_t;
 
 zigma_t* zigma_init(zigma_t* handle, uint8 const* key, uint32 length);
