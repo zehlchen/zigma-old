@@ -284,22 +284,48 @@ void handle_cipher(kvlist_t** head)
     fprintf(stderr, "Successfully opened output file '%s' for writing!\n", output->value);
   }
 
-  uint8 passkey[256]       = {0};
-  uint8 passkey_retry[256] = {0};
+  /* Setup key / passphrase. */
+  uint8  passkey[256]       = {0};
+  uint8  passkey_retry[256] = {0};
+  uint32 keylen             = 0;
+  uint32 keylen_retry       = 0;
 
-  uint32 keylen       = get_passwd(passkey, (uint8*) "enter passphrase: ");
-  uint32 keylen_retry = get_passwd(passkey_retry, (uint8*) "enter passphrase again: ");
+  /* Read the key from a file. */
+  if (*key->value != 0) {
+    FILE* key_fp = fopen(key->value, "r");
 
-  if (keylen != keylen_retry || strcmp((char*) passkey, (char*) passkey_retry) != 0) {
-    fprintf(stderr, "PASSWORD MISMATCH!\n");
+    if (key_fp == NULL) {
+      fprintf(stderr, "ERROR: fopen(): unable to open key file '%s': %s!\n", key->value, strerror(errno));
+      exit(EXIT_FAILURE);
+    }
 
-    memnull(passkey, 256);
-    memnull(passkey_retry, 256);
+    keylen = fread(passkey, 1, 256, key_fp);
 
-    fclose(input_fp);
-    fclose(output_fp);
+    if (keylen == 0) {
+      fprintf(stderr, "ERROR: fread(): unable to read key file '%s': %s!\n", key->value, strerror(errno));
+      exit(EXIT_FAILURE);
+    }
 
-    exit(EXIT_FAILURE);
+    fprintf(stderr, "Read %u bytes from key file '%s'!\n", keylen, key->value);
+
+    fclose(key_fp);
+  }
+  /* Read the key from the user. */
+  else {
+    keylen       = get_passwd(passkey, (uint8*) "enter passphrase: ");
+    keylen_retry = get_passwd(passkey_retry, (uint8*) "enter passphrase again: ");
+
+    if (keylen != keylen_retry || strcmp((char*) passkey, (char*) passkey_retry) != 0) {
+      fprintf(stderr, "PASSWORD MISMATCH!\n");
+
+      memnull(passkey, 256);
+      memnull(passkey_retry, 256);
+
+      fclose(input_fp);
+      fclose(output_fp);
+
+      exit(EXIT_FAILURE);
+    }
   }
 
   zigma_t*  ziggy  = zigma_init(NULL, passkey, keylen);
@@ -407,10 +433,35 @@ void handle_decipher(kvlist_t** head)
     fprintf(stderr, "Successfully opened output file '%s' for writing!\n", output->value);
   }
 
-  uint8     passkey[256] = {0};
-  uint32    keylen       = get_passwd(passkey, (uint8*) "enter passphrase: ");
-  zigma_t*  ziggy        = zigma_init(NULL, passkey, keylen);
-  matrix_t* matrix       = matrix_init(NULL, 0);
+  /* Setup the key / passphrase */
+  uint8  passkey[256] = {0};
+  uint32 keylen       = 0;
+
+  /* Read the key from a file. */
+  if (*key->value != 0) {
+    FILE* key_fp = fopen(key->value, "r");
+
+    if (key_fp == NULL) {
+      fprintf(stderr, "ERROR: fopen(): unable to open key file '%s': %s!\n", key->value, strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+
+    keylen = fread(passkey, 1, 256, key_fp);
+
+    if (keylen == 0) {
+      fprintf(stderr, "ERROR: fread(): unable to read key file '%s': %s!\n", key->value, strerror(errno));
+      exit(EXIT_FAILURE);
+    }
+    fprintf(stderr, "Read %u bytes from key file '%s'!\n", keylen, key->value);
+
+    fclose(key_fp);
+  }
+  else {
+    keylen = get_passwd(passkey, (uint8*) "enter passphrase: ");
+  }
+
+  zigma_t*  ziggy  = zigma_init(NULL, passkey, keylen);
+  matrix_t* matrix = matrix_init(NULL, 0);
 
   zigma_cb_t* poem_callback = zigma_decrypt;
 
