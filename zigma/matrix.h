@@ -45,10 +45,38 @@ typedef struct matrix_t {
   uint8* data;
 } matrix_t;
 
+/* Initializes and allocates a matrix object. If the matrix object is NULL,
+ * it will be allocated. If the matrix object is not NULL, it will be
+ * reinitialized. The matrix object will be allocated with a capacity of at
+ * least size_request bytes or 1MB, whichever is larger.
+ *   @param matrix The matrix object to initialize.
+ *   @param size_request The number of bytes to be stored in the matrix.
+ *   @return The initialized matrix object.
+ *   @note The matrix object will be allocated with a capacity of at least 1 MB.
+ */
 matrix_t* matrix_init(matrix_t* matrix, uint32 size_request);
+
+/* Destroys a matrix object.
+ *   @param matrix The matrix structure to securely destroy.
+ *   @return NULL.
+ */
 matrix_t* matrix_destroy(matrix_t* matrix);
+
+/* Resizes a matrix object to at least size_request bytes. If the matrix is
+ * already large enough, it will not be resized.
+ *   @param matrix The matrix object to resize.
+ *   @param size_request The number of bytes to be stored in the matrix.
+ *   @return The resized matrix object.
+ *   @note The matrix object will be allocated with a capacity of at least 1 MB.
+ */
 matrix_t* matrix_resize(matrix_t* matrix, uint32 size_request);
 
+/* Find the smallest value for which the square will contain request_size.
+ * This is used to determine the size of the matrix. Ideally this could be
+ * done with a square root, but that would require a floating point library.
+ *   @param request_size The number of bytes to be stored in the matrix.
+ *   @return The smallest value for which the square will contain request_size.
+ */
 uint32 matrix_smallest_magnitude(uint32 request_size);
 
 void matrix_print(matrix_t* matrix);

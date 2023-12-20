@@ -26,15 +26,6 @@
 
 #include "zigma.h"
 
-/* Initializes and allocates a zigma object.
- * If the zigma object is NULL, it will be allocated. If the key is NULL, the
- * zigma object will be initialized with a hash function. If the key is not
- * NULL, the zigma object will be initialized with the key.
- *   @param handle The zigma object to initialize.
- *   @param key The key to initialize the zigma object with or NULL for hash.
- *   @param length The length of the key in bytes.
- *   @return The initialized zigma object.
- */
 zigma_t* zigma_init(zigma_t* handle, uint8 const* key, uint32 length)
 {
   if (handle == NULL)
@@ -72,10 +63,6 @@ zigma_t* zigma_init(zigma_t* handle, uint8 const* key, uint32 length)
   return handle;
 }
 
-/* Initializes a non-NULL zigma object for use as a hash.
- *   @param handle The zigma object to initialize.
- *   @return The initialized zigma object.
- */
 zigma_t* zigma_init_hash(zigma_t* handle)
 {
   DEBUG_ASSERT(handle != NULL);
@@ -93,11 +80,6 @@ zigma_t* zigma_init_hash(zigma_t* handle)
   return handle;
 }
 
-/* Terminate the state for the purpose of generating a checksum.
- *   @param handle The zigma object to terminate.
- *   @param data The checksum value to be populated.
- *   @param length The length of the hash checksum in bytes.
- */
 void zigma_hash_sign(zigma_t* handle, uint8* data, uint32 length)
 {
   /* Advance the permutation vector. */
@@ -110,12 +92,6 @@ void zigma_hash_sign(zigma_t* handle, uint8* data, uint32 length)
     data[i] = zigma_encrypt_byte(handle, 0);
 }
 
-/* Encrypt a single byte.
- *   @param handle The zigma object to encrypt with.
- *   @param byte The byte to encrypt.
- *   @return The encrypted byte.
- *   @note The zigma object must have been initialized with a key.
- */
 uint8 zigma_encrypt_byte(zigma_t* handle, uint32 byte)
 {
   uint8 swaptemp;
@@ -140,12 +116,6 @@ uint8 zigma_encrypt_byte(zigma_t* handle, uint32 byte)
   return handle->byte_Y;
 }
 
-/* Decrypt a single byte.
- *   @param handle The zigma object to decrypt with.
- *   @param byte The byte to decrypt.
- *   @return The decrypted byte.
- *   @note The zigma object must have been initialized with a key.
- */
 uint8 zigma_decrypt_byte(zigma_t* handle, uint32 byte)
 {
   uint8 swaptemp;
@@ -170,12 +140,6 @@ uint8 zigma_decrypt_byte(zigma_t* handle, uint32 byte)
   return handle->byte_X;
 }
 
-/* Encrypt a string of data.
- *   @param handle The zigma object to encrypt with.
- *   @param data The data to encrypt.
- *   @param size The size of the data in bytes.
- *   @note The zigma object must have been initialized with a key.
- */
 void zigma_encrypt(zigma_t* handle, uint8* data, uint32 size)
 {
   DEBUG_ASSERT(handle != NULL);
@@ -185,12 +149,6 @@ void zigma_encrypt(zigma_t* handle, uint8* data, uint32 size)
     data[i] = zigma_encrypt_byte(handle, data[i]);
 }
 
-/* Decrypt a string of data.
- *   @param handle The zigma object to decrypt with.
- *   @param data The data to decrypt.
- *   @param size The size of the data in bytes.
- *   @note The zigma object must have been initialized with a key.
- */
 void zigma_decrypt(zigma_t* handle, uint8* data, uint32 size)
 {
   DEBUG_ASSERT(handle != NULL);
@@ -200,15 +158,6 @@ void zigma_decrypt(zigma_t* handle, uint8* data, uint32 size)
     data[i] = zigma_decrypt_byte(handle, data[i]);
 }
 
-/* Generate a random number from a key.
- *   @param handle The zigma object to generate with.
- *   @param limit The maximum value to generate.
- *   @param key The key to generate with.
- *   @param length The length of the key in bytes.
- *   @param rsum The random sum to generate with.
- *   @param keypos The key position to generate with.
- *   @return The generated random number.
- */
 uint8 zigma_keyrand(zigma_t* handle, uint32 limit, uint8 const* key, uint32 length, uint8* rsum, uint32* keypos)
 {
   uint32 u;
@@ -236,10 +185,6 @@ uint8 zigma_keyrand(zigma_t* handle, uint32 limit, uint8 const* key, uint32 leng
   return u;
 }
 
-/* Print the state of a zigma object.
- *   @param handle The zigma object to print.
- *   @note This function is for debugging purposes only.
- */
 void zigma_print(zigma_t* handle)
 {
   DEBUG_ASSERT(handle != NULL);
